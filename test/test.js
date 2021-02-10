@@ -64,9 +64,8 @@ describe('Unit tests', async () => {
     });
 
     it('should return true if signature is valid', async () => {
-      let message = 'hello world';
-      let signature = lamport.sign(message, privateKey);
-      let verified = lamport.verify(message, signature, publicKey);
+      let signature = lamport.sign('hello world...', privateKey);
+      let verified = lamport.verify('hello world...', signature, publicKey);
       assert.equal(verified, true);
     });
 
