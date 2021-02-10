@@ -26,13 +26,13 @@ gulp.task('browserify', function (done) {
   var stream = browserify({
     builtins: ['_process', 'buffer'],
     entries: 'index.js',
-    standalone: 'SimpleLamport'
+    standalone: 'LiteLamport'
   })
     .require('./index.js', {
-      expose: 'simple-lamport'
+      expose: 'lite-lamport'
     })
     .bundle();
-  return stream.pipe(source('simple-lamport.js'))
+  return stream.pipe(source('lite-lamport.js'))
     // .pipe(insert.prepend(FULL_HEADER))
     .pipe(convertNewline({
       newline: 'lf',
@@ -42,7 +42,7 @@ gulp.task('browserify', function (done) {
 });
 
 gulp.task('minify', function () {
-  return gulp.src(DIST + 'simple-lamport.js')
+  return gulp.src(DIST + 'lite-lamport.js')
     .pipe(babel({
       comments: false
     }))

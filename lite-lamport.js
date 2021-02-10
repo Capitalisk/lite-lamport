@@ -1,5 +1,5 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.SimpleLamport = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-(function (Buffer){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.LiteLamport = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function (Buffer){(function (){
 const hash = require('hash.js');
 
 module.exports = function (secret, secretEncoding, message, outputEncoding) {
@@ -12,7 +12,7 @@ module.exports = function (secret, secretEncoding, message, outputEncoding) {
   return Buffer.from(shasum, 'hex').toString(outputEncoding || 'base64');
 };
 
-}).call(this,require("buffer").Buffer)
+}).call(this)}).call(this,require("buffer").Buffer)
 },{"buffer":3,"hash.js":4}],2:[function(require,module,exports){
 'use strict'
 
@@ -141,9 +141,7 @@ function fromByteArray (uint8) {
 
   // go through the array every three bytes, we'll deal with trailing stuff later
   for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(
-      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-    ))
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
   }
 
   // pad the end with zeros, but make sure to not forget the extra bytes
@@ -168,7 +166,7 @@ function fromByteArray (uint8) {
 }
 
 },{}],3:[function(require,module,exports){
-(function (Buffer){
+(function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1947,7 +1945,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-}).call(this,require("buffer").Buffer)
+}).call(this)}).call(this,require("buffer").Buffer)
 },{"base64-js":2,"buffer":3,"ieee754":16}],4:[function(require,module,exports){
 var hash = exports;
 
@@ -3181,6 +3179,7 @@ function shr64_lo(ah, al, num) {
 exports.shr64_lo = shr64_lo;
 
 },{"inherits":17,"minimalistic-assert":18}],16:[function(require,module,exports){
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -3495,7 +3494,7 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],20:[function(require,module,exports){
-(function (process,global){
+(function (process,global){(function (){
 'use strict'
 
 // limit of Crypto.getRandomValues()
@@ -3547,7 +3546,7 @@ function randomBytes (size, cb) {
   return bytes
 }
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"_process":19,"safe-buffer":21}],21:[function(require,module,exports){
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
@@ -3616,7 +3615,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 }
 
 },{"buffer":3}],22:[function(require,module,exports){
-(function (Buffer){
+(function (Buffer){(function (){
 const hash = require('hash.js');
 
 module.exports = function (message, encoding) {
@@ -3627,18 +3626,20 @@ module.exports = function (message, encoding) {
   return Buffer.from(shasum, 'hex').toString(encoding || 'base64');
 };
 
-}).call(this,require("buffer").Buffer)
-},{"buffer":3,"hash.js":4}],"simple-lamport":[function(require,module,exports){
-(function (Buffer){
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"buffer":3,"hash.js":4}],"lite-lamport":[function(require,module,exports){
+(function (Buffer){(function (){
 const randomBytes = require('randombytes');
 const sha256 = require('./sha256');
 const hmacSha256 = require('./hmac-sha256');
 
-const KEY_SIG_ENTRY_COUNT = 256;
+const CHECKSUM_BYTE_SIZE = 1;
+const KEY_SIG_ENTRY_COUNT = 264;
+const MAX_CHECKSUM = 255;
 const HASH_ELEMENT_BYTE_SIZE = 32;
 const SEED_BYTE_SIZE = 32;
 
-class SimpleLamport {
+class LiteLamport {
   constructor(options) {
     options = options || {};
     this.keyFormat = options.keyFormat || 'base64';
@@ -3657,6 +3658,7 @@ class SimpleLamport {
         return rawKey;
       };
       this.decodeKey = (encodedkey) => {
+        this._validateRawKeyFormat(encodedkey);
         return encodedkey;
       };
     } else if (this.keyFormat === 'json') {
@@ -3664,7 +3666,9 @@ class SimpleLamport {
         return JSON.stringify(rawKey);
       };
       this.decodeKey = (encodedKey) => {
-        return JSON.parse(encodedKey);
+        let decodedKey = JSON.parse(encodedKey);
+        this._validateRawKeyFormat(decodedKey);
+        return decodedKey;
       };
     } else if (this.keyFormat === 'buffer') {
       this.encodeKey = (rawKey) => {
@@ -3688,6 +3692,7 @@ class SimpleLamport {
         return rawSignature;
       };
       this.decodeSignature = (encodedSignature) => {
+        this._validateRawSignatureFormat(encodedSignature);
         return encodedSignature;
       };
     } else if (this.signatureFormat === 'json') {
@@ -3695,7 +3700,9 @@ class SimpleLamport {
         return JSON.stringify(rawSignature);
       };
       this.decodeSignature = (encodedSignature) => {
-        return JSON.parse(encodedSignature);
+        let decodedSignature = JSON.parse(encodedSignature);
+        this._validateRawSignatureFormat(decodedSignature);
+        return decodedSignature;
       };
     } else if (this.signatureFormat === 'buffer') {
       this.encodeSignature = (rawSignature) => {
@@ -3733,14 +3740,8 @@ class SimpleLamport {
     if (index == null) {
       index = 0;
     }
-    let privateKey = [
-      this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, `${index}-a`),
-      this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, `${index}-b`)
-    ];
-
-    let publicKey = privateKey.map((privateKeyPart) => {
-      return privateKeyPart.map((encodedString) => this.hash(encodedString, this.hashEncoding));
-    });
+    let privateKey = this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, index);
+    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -3749,14 +3750,8 @@ class SimpleLamport {
   }
 
   generateKeys() {
-    let privateKey = [
-      this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE),
-      this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE)
-    ];
-
-    let publicKey = privateKey.map((privateKeyPart) => {
-      return privateKeyPart.map((encodedString) => this.hash(encodedString, this.hashEncoding));
-    });
+    let privateKey = this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE);
+    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -3768,7 +3763,18 @@ class SimpleLamport {
     let privateKeyRaw = this.decodeKey(privateKey);
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
-    let signature = messageBitArray.map((bit, index) => privateKeyRaw[bit][index]);
+    let checksum = Math.min(
+      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      MAX_CHECKSUM
+    );
+    let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
+    let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
+    for (let bit of checksumBitArray) {
+      messageBitArray.push(bit);
+    }
+    let signature = messageBitArray
+      .map((bit, index) => bit ? privateKeyRaw[index] : null)
+      .filter(item => item);
 
     return this.encodeSignature(signature);
   }
@@ -3782,12 +3788,30 @@ class SimpleLamport {
     } catch (error) {
       return false;
     }
+    let invertedSignatureRaw = signatureRaw.reverse();
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
+    let checksum = Math.min(
+      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      MAX_CHECKSUM
+    );
+    let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
+    let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
+
+    for (let bit of checksumBitArray) {
+      messageBitArray.push(bit);
+    }
 
     return messageBitArray.every((bit, index) => {
-      let signatureItemHash = this.hash(signatureRaw[index], this.hashEncoding);
-      let targetPublicKeyItem = publicKeyRaw[bit][index];
+      if (!bit) {
+        return true;
+      }
+      if (!invertedSignatureRaw.length) {
+        return false;
+      }
+      let nextSignatureItem = invertedSignatureRaw.pop();
+      let signatureItemHash = this.hash(nextSignatureItem, this.hashEncoding);
+      let targetPublicKeyItem = publicKeyRaw[index];
       return signatureItemHash === targetPublicKeyItem;
     });
   }
@@ -3808,9 +3832,7 @@ class SimpleLamport {
     return randomArray;
   }
 
-  convertEncodedStringToBitArray(encodedString) {
-    let buffer = Buffer.from(encodedString, this.hashEncoding);
-
+  convertBufferToBitArray(buffer) {
     let bitArray = [];
     for (let byte of buffer) {
       for (let i = 0; i < 8; i++) {
@@ -3820,30 +3842,92 @@ class SimpleLamport {
     return bitArray;
   }
 
+  convertEncodedStringToBitArray(encodedString) {
+    let buffer = Buffer.from(encodedString, this.hashEncoding);
+    return this.convertBufferToBitArray(buffer);
+  }
+
+  _validateRawKeyFormat(key) {
+    if (!Array.isArray(key)) {
+      throw new Error(
+        'The specified key was in an invalid format - Expected an array'
+      );
+    }
+    if (key.length !== KEY_SIG_ENTRY_COUNT) {
+      throw new Error(
+        `The specified key had an invalid length - Contained ${
+          key.length
+        } items but expected ${
+          KEY_SIG_ENTRY_COUNT
+        } items`
+      );
+    }
+    let areAllItemsValid = key.every(item => {
+      if (typeof item !== 'string') {
+        return false;
+      }
+      return Buffer.byteLength(item, this.hashEncoding) === HASH_ELEMENT_BYTE_SIZE;
+    });
+    if (!areAllItemsValid) {
+      throw new Error(
+        'The specified key contained invalid items'
+      );
+    }
+  }
+
+  _validateRawSignatureFormat(signature) {
+    if (!Array.isArray(signature)) {
+      throw new Error(
+        'The specified signature was in an invalid format - Expected an array'
+      );
+    }
+    if (signature.length > KEY_SIG_ENTRY_COUNT) {
+      throw new Error(
+        `The specified signature had an invalid length - Contained ${
+          signature.length
+        } items but expected no more than ${
+          KEY_SIG_ENTRY_COUNT
+        } items`
+      );
+    }
+    let areAllItemsValid = signature.every(item => {
+      if (typeof item !== 'string') {
+        return false;
+      }
+      return Buffer.byteLength(item, this.hashEncoding) === HASH_ELEMENT_BYTE_SIZE;
+    });
+    if (!areAllItemsValid) {
+      throw new Error(
+        'The specified signature contained invalid items'
+      );
+    }
+  }
+
   _encodeKeyToBuffer(rawKey) {
     let bufferArray = [];
-    for (let keyPart of rawKey) {
-      for (let item of keyPart) {
-        bufferArray.push(Buffer.from(item, this.hashEncoding));
-      }
+    for (let item of rawKey) {
+      bufferArray.push(Buffer.from(item, this.hashEncoding));
     }
     return Buffer.concat(bufferArray);
   }
 
   _decodeKeyFromBuffer(encodedKey) {
-    let keyFirstPart = [];
-    let keySecondPart = [];
-    let key = [keyFirstPart, keySecondPart];
-    for (let i = 0; i < KEY_SIG_ENTRY_COUNT; i++) {
-      let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
-      let bufferItem = encodedKey.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
-      keyFirstPart.push(bufferItem.toString(this.hashEncoding));
+    let key = [];
+    let expectedByteSize = KEY_SIG_ENTRY_COUNT * HASH_ELEMENT_BYTE_SIZE;
+    if (encodedKey.byteLength !== expectedByteSize) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedKey.byteLength
+        } but expected ${
+          expectedByteSize
+        } bytes`
+      );
     }
-    let totalKeyLength = KEY_SIG_ENTRY_COUNT * 2;
-    for (let i = KEY_SIG_ENTRY_COUNT; i < totalKeyLength; i++) {
+    let entryCount = encodedKey.byteLength / HASH_ELEMENT_BYTE_SIZE;
+    for (let i = 0; i < entryCount; i++) {
       let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
       let bufferItem = encodedKey.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
-      keySecondPart.push(bufferItem.toString(this.hashEncoding));
+      key.push(bufferItem.toString(this.hashEncoding));
     }
     return key;
   }
@@ -3858,7 +3942,27 @@ class SimpleLamport {
 
   _decodeSignatureFromBuffer(encodedSignature) {
     let signatureArray = [];
-    for (let i = 0; i < KEY_SIG_ENTRY_COUNT; i++) {
+    let maxExpectedByteSize = KEY_SIG_ENTRY_COUNT * HASH_ELEMENT_BYTE_SIZE;
+    if (encodedSignature.byteLength > maxExpectedByteSize) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedSignature.byteLength
+        } but expected no more than ${
+          maxExpectedByteSize
+        } bytes`
+      );
+    }
+    if (encodedSignature.byteLength % HASH_ELEMENT_BYTE_SIZE !== 0) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedSignature.byteLength
+        } bytes but expected it to be a multiple of ${
+          HASH_ELEMENT_BYTE_SIZE
+        }`
+      );
+    }
+    let entryCount = encodedSignature.byteLength / HASH_ELEMENT_BYTE_SIZE;
+    for (let i = 0; i < entryCount; i++) {
       let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
       let bufferItem = encodedSignature.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
       signatureArray.push(bufferItem.toString(this.hashEncoding));
@@ -3867,8 +3971,8 @@ class SimpleLamport {
   }
 }
 
-module.exports = SimpleLamport;
+module.exports = LiteLamport;
 
-}).call(this,require("buffer").Buffer)
-},{"./hmac-sha256":1,"./sha256":22,"buffer":3,"randombytes":20}]},{},["simple-lamport"])("simple-lamport")
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"./hmac-sha256":1,"./sha256":22,"buffer":3,"randombytes":20}]},{},["lite-lamport"])("lite-lamport")
 });

@@ -1,11 +1,11 @@
 {
-  "name": "simple-lamport",
-  "version": "4.0.2",
+  "name": "lite-lamport",
+  "version": "1.0.0",
   "description": "Simple Lamport one-time signature library",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jondubois/simple-lamport.git"
+    "url": "git://github.com/jondubois/lite-lamport.git"
   },
   "scripts": {
     "build": "gulp browserify; gulp minify",

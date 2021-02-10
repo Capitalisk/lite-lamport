@@ -1,5 +1,5 @@
 const assert = require('assert');
-const SimpleLamport = require('../index');
+const LiteLamport = require('../index');
 const hash = require('hash.js');
 
 describe('Unit tests', async () => {
@@ -7,7 +7,7 @@ describe('Unit tests', async () => {
   let lamport;
 
   beforeEach(async () => {
-    lamport = new SimpleLamport({
+    lamport = new LiteLamport({
       keyFormat: 'base64',
       signatureFormat: 'base64',
       seedEncoding: 'hex',
@@ -20,12 +20,8 @@ describe('Unit tests', async () => {
       let { privateKey, publicKey } = lamport.generateKeys();
       let rawPrivateKey = lamport.decodeKey(privateKey);
       let rawPublicKey = lamport.decodeKey(publicKey);
-      assert.equal(rawPrivateKey.length, 2);
-      assert.equal(rawPrivateKey[0].length, 256);
-      assert.equal(rawPrivateKey[1].length, 256);
-      assert.equal(rawPublicKey.length, 2);
-      assert.equal(rawPublicKey[0].length, 256);
-      assert.equal(rawPublicKey[1].length, 256);
+      assert.equal(rawPrivateKey.length, 264);
+      assert.equal(rawPublicKey.length, 264);
     });
   });
 
@@ -35,12 +31,8 @@ describe('Unit tests', async () => {
       let { privateKey, publicKey } = lamport.generateKeysFromSeed(seed, 0);
       let rawPrivateKey = lamport.decodeKey(privateKey);
       let rawPublicKey = lamport.decodeKey(publicKey);
-      assert.equal(rawPrivateKey.length, 2);
-      assert.equal(rawPrivateKey[0].length, 256);
-      assert.equal(rawPrivateKey[1].length, 256);
-      assert.equal(rawPublicKey.length, 2);
-      assert.equal(rawPublicKey[0].length, 256);
-      assert.equal(rawPublicKey[1].length, 256);
+      assert.equal(rawPrivateKey.length, 264);
+      assert.equal(rawPublicKey.length, 264);
     });
   });
 
@@ -54,10 +46,10 @@ describe('Unit tests', async () => {
       publicKey = keyPair.publicKey;
     });
 
-    it('should return signature as a string made up of 256 entries', async () => {
+    it('should return signature as a string made up of no more than 264 entries', async () => {
       let signature = lamport.sign('test message', privateKey);
       let rawSignature = lamport.decodeSignature(signature);
-      assert.equal(rawSignature.length, 256);
+      assert.equal(rawSignature.length <= 264, true);
     });
   });
 

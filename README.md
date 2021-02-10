@@ -1,10 +1,10 @@
-# simple-lamport
+# lite-lamport
 Lamport one-time signature scheme library.
 
 ## Installation
 
 ```bash
-npm install simple-lamport
+npm install lite-lamport
 ```
 
 ## Usage
@@ -12,9 +12,9 @@ npm install simple-lamport
 ### Basic
 
 ```js
-const SimpleLamport = require('simple-lamport');
+const LiteLamport = require('lite-lamport');
 
-let lamport = new SimpleLamport();
+let lamport = new LiteLamport();
 
 // Generate private key and public key
 let { privateKey, publicKey } = lamport.generateKeys();
@@ -31,9 +31,9 @@ lamport.verify(message, signature, publicKey);
 ### Generate keys from from seed
 
 ```js
-const SimpleLamport = require('simple-lamport');
+const LiteLamport = require('lite-lamport');
 
-let lamport = new SimpleLamport();
+let lamport = new LiteLamport();
 
 // Generate random secret seed
 let seed = lamport.generateSeed();

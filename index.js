@@ -2,11 +2,13 @@ const randomBytes = require('randombytes');
 const sha256 = require('./sha256');
 const hmacSha256 = require('./hmac-sha256');
 
-const KEY_SIG_ENTRY_COUNT = 256;
+const CHECKSUM_BYTE_SIZE = 1;
+const KEY_SIG_ENTRY_COUNT = 264;
+const MAX_CHECKSUM = 255;
 const HASH_ELEMENT_BYTE_SIZE = 32;
 const SEED_BYTE_SIZE = 32;
 
-class SimpleLamport {
+class LiteLamport {
   constructor(options) {
     options = options || {};
     this.keyFormat = options.keyFormat || 'base64';
@@ -25,6 +27,7 @@ class SimpleLamport {
         return rawKey;
       };
       this.decodeKey = (encodedkey) => {
+        this._validateRawKeyFormat(encodedkey);
         return encodedkey;
       };
     } else if (this.keyFormat === 'json') {
@@ -32,7 +35,9 @@ class SimpleLamport {
         return JSON.stringify(rawKey);
       };
       this.decodeKey = (encodedKey) => {
-        return JSON.parse(encodedKey);
+        let decodedKey = JSON.parse(encodedKey);
+        this._validateRawKeyFormat(decodedKey);
+        return decodedKey;
       };
     } else if (this.keyFormat === 'buffer') {
       this.encodeKey = (rawKey) => {
@@ -56,6 +61,7 @@ class SimpleLamport {
         return rawSignature;
       };
       this.decodeSignature = (encodedSignature) => {
+        this._validateRawSignatureFormat(encodedSignature);
         return encodedSignature;
       };
     } else if (this.signatureFormat === 'json') {
@@ -63,7 +69,9 @@ class SimpleLamport {
         return JSON.stringify(rawSignature);
       };
       this.decodeSignature = (encodedSignature) => {
-        return JSON.parse(encodedSignature);
+        let decodedSignature = JSON.parse(encodedSignature);
+        this._validateRawSignatureFormat(decodedSignature);
+        return decodedSignature;
       };
     } else if (this.signatureFormat === 'buffer') {
       this.encodeSignature = (rawSignature) => {
@@ -101,14 +109,8 @@ class SimpleLamport {
     if (index == null) {
       index = 0;
     }
-    let privateKey = [
-      this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, `${index}-a`),
-      this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, `${index}-b`)
-    ];
-
-    let publicKey = privateKey.map((privateKeyPart) => {
-      return privateKeyPart.map((encodedString) => this.hash(encodedString, this.hashEncoding));
-    });
+    let privateKey = this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, index);
+    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -117,14 +119,8 @@ class SimpleLamport {
   }
 
   generateKeys() {
-    let privateKey = [
-      this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE),
-      this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE)
-    ];
-
-    let publicKey = privateKey.map((privateKeyPart) => {
-      return privateKeyPart.map((encodedString) => this.hash(encodedString, this.hashEncoding));
-    });
+    let privateKey = this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE);
+    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -136,7 +132,18 @@ class SimpleLamport {
     let privateKeyRaw = this.decodeKey(privateKey);
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
-    let signature = messageBitArray.map((bit, index) => privateKeyRaw[bit][index]);
+    let checksum = Math.min(
+      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      MAX_CHECKSUM
+    );
+    let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
+    let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
+    for (let bit of checksumBitArray) {
+      messageBitArray.push(bit);
+    }
+    let signature = messageBitArray
+      .map((bit, index) => bit ? privateKeyRaw[index] : null)
+      .filter(item => item);
 
     return this.encodeSignature(signature);
   }
@@ -150,12 +157,30 @@ class SimpleLamport {
     } catch (error) {
       return false;
     }
+    let invertedSignatureRaw = signatureRaw.reverse();
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
+    let checksum = Math.min(
+      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      MAX_CHECKSUM
+    );
+    let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
+    let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
+
+    for (let bit of checksumBitArray) {
+      messageBitArray.push(bit);
+    }
 
     return messageBitArray.every((bit, index) => {
-      let signatureItemHash = this.hash(signatureRaw[index], this.hashEncoding);
-      let targetPublicKeyItem = publicKeyRaw[bit][index];
+      if (!bit) {
+        return true;
+      }
+      if (!invertedSignatureRaw.length) {
+        return false;
+      }
+      let nextSignatureItem = invertedSignatureRaw.pop();
+      let signatureItemHash = this.hash(nextSignatureItem, this.hashEncoding);
+      let targetPublicKeyItem = publicKeyRaw[index];
       return signatureItemHash === targetPublicKeyItem;
     });
   }
@@ -176,9 +201,7 @@ class SimpleLamport {
     return randomArray;
   }
 
-  convertEncodedStringToBitArray(encodedString) {
-    let buffer = Buffer.from(encodedString, this.hashEncoding);
-
+  convertBufferToBitArray(buffer) {
     let bitArray = [];
     for (let byte of buffer) {
       for (let i = 0; i < 8; i++) {
@@ -188,30 +211,92 @@ class SimpleLamport {
     return bitArray;
   }
 
+  convertEncodedStringToBitArray(encodedString) {
+    let buffer = Buffer.from(encodedString, this.hashEncoding);
+    return this.convertBufferToBitArray(buffer);
+  }
+
+  _validateRawKeyFormat(key) {
+    if (!Array.isArray(key)) {
+      throw new Error(
+        'The specified key was in an invalid format - Expected an array'
+      );
+    }
+    if (key.length !== KEY_SIG_ENTRY_COUNT) {
+      throw new Error(
+        `The specified key had an invalid length - Contained ${
+          key.length
+        } items but expected ${
+          KEY_SIG_ENTRY_COUNT
+        } items`
+      );
+    }
+    let areAllItemsValid = key.every(item => {
+      if (typeof item !== 'string') {
+        return false;
+      }
+      return Buffer.byteLength(item, this.hashEncoding) === HASH_ELEMENT_BYTE_SIZE;
+    });
+    if (!areAllItemsValid) {
+      throw new Error(
+        'The specified key contained invalid items'
+      );
+    }
+  }
+
+  _validateRawSignatureFormat(signature) {
+    if (!Array.isArray(signature)) {
+      throw new Error(
+        'The specified signature was in an invalid format - Expected an array'
+      );
+    }
+    if (signature.length > KEY_SIG_ENTRY_COUNT) {
+      throw new Error(
+        `The specified signature had an invalid length - Contained ${
+          signature.length
+        } items but expected no more than ${
+          KEY_SIG_ENTRY_COUNT
+        } items`
+      );
+    }
+    let areAllItemsValid = signature.every(item => {
+      if (typeof item !== 'string') {
+        return false;
+      }
+      return Buffer.byteLength(item, this.hashEncoding) === HASH_ELEMENT_BYTE_SIZE;
+    });
+    if (!areAllItemsValid) {
+      throw new Error(
+        'The specified signature contained invalid items'
+      );
+    }
+  }
+
   _encodeKeyToBuffer(rawKey) {
     let bufferArray = [];
-    for (let keyPart of rawKey) {
-      for (let item of keyPart) {
-        bufferArray.push(Buffer.from(item, this.hashEncoding));
-      }
+    for (let item of rawKey) {
+      bufferArray.push(Buffer.from(item, this.hashEncoding));
     }
     return Buffer.concat(bufferArray);
   }
 
   _decodeKeyFromBuffer(encodedKey) {
-    let keyFirstPart = [];
-    let keySecondPart = [];
-    let key = [keyFirstPart, keySecondPart];
-    for (let i = 0; i < KEY_SIG_ENTRY_COUNT; i++) {
-      let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
-      let bufferItem = encodedKey.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
-      keyFirstPart.push(bufferItem.toString(this.hashEncoding));
+    let key = [];
+    let expectedByteSize = KEY_SIG_ENTRY_COUNT * HASH_ELEMENT_BYTE_SIZE;
+    if (encodedKey.byteLength !== expectedByteSize) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedKey.byteLength
+        } but expected ${
+          expectedByteSize
+        } bytes`
+      );
     }
-    let totalKeyLength = KEY_SIG_ENTRY_COUNT * 2;
-    for (let i = KEY_SIG_ENTRY_COUNT; i < totalKeyLength; i++) {
+    let entryCount = encodedKey.byteLength / HASH_ELEMENT_BYTE_SIZE;
+    for (let i = 0; i < entryCount; i++) {
       let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
       let bufferItem = encodedKey.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
-      keySecondPart.push(bufferItem.toString(this.hashEncoding));
+      key.push(bufferItem.toString(this.hashEncoding));
     }
     return key;
   }
@@ -226,7 +311,27 @@ class SimpleLamport {
 
   _decodeSignatureFromBuffer(encodedSignature) {
     let signatureArray = [];
-    for (let i = 0; i < KEY_SIG_ENTRY_COUNT; i++) {
+    let maxExpectedByteSize = KEY_SIG_ENTRY_COUNT * HASH_ELEMENT_BYTE_SIZE;
+    if (encodedSignature.byteLength > maxExpectedByteSize) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedSignature.byteLength
+        } but expected no more than ${
+          maxExpectedByteSize
+        } bytes`
+      );
+    }
+    if (encodedSignature.byteLength % HASH_ELEMENT_BYTE_SIZE !== 0) {
+      throw new Error(
+        `The specified key had an invalid length - Was ${
+          encodedSignature.byteLength
+        } bytes but expected it to be a multiple of ${
+          HASH_ELEMENT_BYTE_SIZE
+        }`
+      );
+    }
+    let entryCount = encodedSignature.byteLength / HASH_ELEMENT_BYTE_SIZE;
+    for (let i = 0; i < entryCount; i++) {
       let byteOffset = i * HASH_ELEMENT_BYTE_SIZE;
       let bufferItem = encodedSignature.slice(byteOffset, byteOffset + HASH_ELEMENT_BYTE_SIZE);
       signatureArray.push(bufferItem.toString(this.hashEncoding));
@@ -235,4 +340,4 @@ class SimpleLamport {
   }
 }
 
-module.exports = SimpleLamport;
+module.exports = LiteLamport;
