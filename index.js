@@ -130,7 +130,7 @@ class LiteLamport {
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
     let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
       MAX_CHECKSUM
     );
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
@@ -158,7 +158,7 @@ class LiteLamport {
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
     let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
       MAX_CHECKSUM
     );
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
