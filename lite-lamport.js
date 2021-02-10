@@ -3650,9 +3650,6 @@ class LiteLamport {
     this.sha256 = sha256;
     this.hmacSha256 = hmacSha256;
 
-    this.hash = this.sha256;
-    this.hmacHash = this.hmacSha256;
-
     if (this.keyFormat === 'object') {
       this.encodeKey = (rawKey) => {
         return rawKey;
@@ -3741,7 +3738,7 @@ class LiteLamport {
       index = 0;
     }
     let privateKey = this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, index);
-    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
+    let publicKey = privateKey.map(encodedString => this.sha256(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -3751,7 +3748,7 @@ class LiteLamport {
 
   generateKeys() {
     let privateKey = this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE);
-    let publicKey = privateKey.map(encodedString => this.hash(encodedString, this.hashEncoding));
+    let publicKey = privateKey.map(encodedString => this.sha256(encodedString, this.hashEncoding));
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -3764,7 +3761,7 @@ class LiteLamport {
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
     let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
       MAX_CHECKSUM
     );
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
@@ -3792,7 +3789,7 @@ class LiteLamport {
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
     let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + 1 - bit, 0),
+      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
       MAX_CHECKSUM
     );
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
@@ -3810,7 +3807,7 @@ class LiteLamport {
         return false;
       }
       let nextSignatureItem = invertedSignatureRaw.pop();
-      let signatureItemHash = this.hash(nextSignatureItem, this.hashEncoding);
+      let signatureItemHash = this.sha256(nextSignatureItem, this.hashEncoding);
       let targetPublicKeyItem = publicKeyRaw[index];
       return signatureItemHash === targetPublicKeyItem;
     });
@@ -3827,7 +3824,7 @@ class LiteLamport {
   generateRandomArrayFromSeed(length, seed, suffix) {
     let randomArray = [];
     for (let i = 0; i < length; i++) {
-      randomArray.push(this.hmacHash(seed, this.seedEncoding, `${suffix}-${i}`, this.hashEncoding));
+      randomArray.push(this.hmacSha256(seed, this.seedEncoding, `${suffix}-${i}`, this.hashEncoding));
     }
     return randomArray;
   }

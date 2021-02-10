@@ -1,6 +1,6 @@
 {
   "name": "lite-lamport",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Simple Lamport one-time signature library",
   "main": "index.js",
   "repository": {
