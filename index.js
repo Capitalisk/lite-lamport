@@ -4,7 +4,6 @@ const hmacSha256 = require('./hmac-sha256');
 
 const CHECKSUM_BYTE_SIZE = 1;
 const KEY_SIG_ENTRY_COUNT = 264;
-const MAX_CHECKSUM = 255;
 const HASH_ELEMENT_BYTE_SIZE = 32;
 const SEED_BYTE_SIZE = 32;
 
@@ -129,10 +128,7 @@ class LiteLamport {
     let privateKeyRaw = this.decodeKey(privateKey);
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
-    let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
-      MAX_CHECKSUM
-    );
+    let checksum = messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0);
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
     let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
     for (let bit of checksumBitArray) {
@@ -157,10 +153,7 @@ class LiteLamport {
     let invertedSignatureRaw = signatureRaw.reverse();
     let messageHash = this.sha256(message, this.hashEncoding);
     let messageBitArray = this.convertEncodedStringToBitArray(messageHash);
-    let checksum = Math.min(
-      messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0),
-      MAX_CHECKSUM
-    );
+    let checksum = messageBitArray.reduce((total, bit) => total + (bit ^ 1), 0);
     let checksumBuffer = Buffer.alloc(CHECKSUM_BYTE_SIZE).fill(checksum);
     let checksumBitArray = this.convertBufferToBitArray(checksumBuffer);
 
