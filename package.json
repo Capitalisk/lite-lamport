@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jondubois/lite-lamport.git"
+    "url": "git://github.com/Capitalisk/lite-lamport.git"
   },
   "scripts": {
     "build": "gulp browserify; gulp minify",
