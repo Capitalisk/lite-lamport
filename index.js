@@ -91,6 +91,15 @@ class LiteLamport {
     return randomBytes(SEED_BYTE_SIZE).toString(this.seedEncoding);
   }
 
+  getRawPublicKeyFromRawPrivateKey(privateKeyRaw) {
+    return privateKeyRaw.map(encodedString => this.sha256(encodedString, this.hashEncoding));
+  }
+
+  getPublicKeyFromPrivateKey(privateKey) {
+    let privateKeyRaw = this.decodeKey(privateKey);
+    return this.encodeKey(this.getRawPublicKeyFromRawPrivateKey(privateKeyRaw));
+  }
+
   generateKeysFromSeed(seed, index) {
     let seedBuffer = Buffer.from(seed, this.seedEncoding);
     if (seedBuffer.byteLength < SEED_BYTE_SIZE) {
@@ -106,7 +115,7 @@ class LiteLamport {
       index = 0;
     }
     let privateKey = this.generateRandomArrayFromSeed(KEY_SIG_ENTRY_COUNT, seed, index);
-    let publicKey = privateKey.map(encodedString => this.sha256(encodedString, this.hashEncoding));
+    let publicKey = this.getRawPublicKeyFromRawPrivateKey(privateKey);
 
     return {
       privateKey: this.encodeKey(privateKey),
@@ -116,7 +125,7 @@ class LiteLamport {
 
   generateKeys() {
     let privateKey = this.generateRandomArray(KEY_SIG_ENTRY_COUNT, HASH_ELEMENT_BYTE_SIZE);
-    let publicKey = privateKey.map(encodedString => this.sha256(encodedString, this.hashEncoding));
+    let publicKey = this.getRawPublicKeyFromRawPrivateKey(privateKey);
 
     return {
       privateKey: this.encodeKey(privateKey),
