@@ -1,6 +1,6 @@
 {
   "name": "lite-lamport",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Simple Lamport one-time signature library",
   "main": "index.js",
   "repository": {
@@ -19,12 +19,14 @@
   "author": "Jonathan Gros-Dubois",
   "license": "MIT",
   "devDependencies": {
+    "@rollup/plugin-inject": "^5.0.5",
     "mocha": "^11.7.5"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
+    "buffer": "^6.0.3",
     "hash.js": "^1.1.7",
     "randombytes": "^2.1.0",
     "rollup": "^4.54.0"
