@@ -58,7 +58,7 @@ class LiteLamport {
       };
       this.decodeSignature = (encodedSignature) => {
         this._validateRawSignatureFormat(encodedSignature);
-        return encodedSignature;
+        return [...encodedSignature];
       };
     } else if (this.signatureFormat === 'json') {
       this.encodeSignature = (rawSignature) => {
